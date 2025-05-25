@@ -126,29 +126,29 @@ async def run(ctx: Context[Inputs, Outputs, Settings]) -> AsyncIterator[Output[F
         if last_present is not None:
             elapsed = (now - last_present).total_seconds()
             if elapsed >= THRESHOLD_SEC:
-                msg = f"Person detected after {elapsed:.0f}s absence"
+                msg = f"{ctx.settings.label.value} detected after {elapsed:.0f}s absence"
                 last_present = None       
                 
                 if ctx.settings.repeat.value:
-                    print("📢", msg)
+                    print("TRIGGER", msg)
                     yield build_output(ctx, msg)
                 else:
                     if not triggered:
-                        print("📢", msg)
+                        print("TRIGGER", msg)
                         triggered = True
                         yield build_output(ctx, msg)              
     else:  
         if last_empty is not None:
             elapsed = (now - last_empty).total_seconds()
             if elapsed >= THRESHOLD_SEC:
-                msg = f"Person missing for {elapsed:.0f}s"
+                msg = f"{ctx.settings.label.value} missing for {elapsed:.0f}s"
                 last_empty = None  
 
                 if ctx.settings.repeat.value:
-                    print("📢", msg)
+                    print("TRIGGER", msg)
                     yield build_output(ctx, msg)
                 else:
                     if not triggered:
-                        print("📢", msg)
+                        print("TRIGGER", msg)
                         triggered = True
                         yield build_output(ctx, msg)

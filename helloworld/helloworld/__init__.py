@@ -55,8 +55,8 @@ class Settings(ElementSettings):
     dropdown_setting = TextSetting(
         name="dropdown_setting",
         display_name="Dropdown Setting",
-        default="mlx-community/multilingual-e5-small-mlx",
-        description="Embedding model to apply to provided text",
+        default="item1",
+        description="An Item",
         valid_values=[
             "item1",
             "item2",

@@ -59,7 +59,7 @@ class Settings(ElementSettings):
     payload_template = TextSetting(
         name="payload_template",
         display_name="Body template (JSON with $text placeholder)",
-        default='{"text":"$text"}',
+        default='{"channel":"a-slack-channel","message":"$message"}',
         description="Rendered with incoming Frame data using $placeholders.",
         required=True,
     )
@@ -77,8 +77,8 @@ class Settings(ElementSettings):
         default=True,
     )
 
-    is_enable = BoolSetting(
-        name="is_enabled",
+    enabled = BoolSetting(
+        name="enabled",
         display_name="Enable or Disable",
         default=True,
     )
@@ -93,7 +93,7 @@ element = Element(
     name="rest",
     display_name="REST API",
     description="Send an HTTP request to any REST endpoint using a template body.",
-    version="0.1.5",
+    version="0.1.8",
     settings=Settings(),
     inputs=Inputs(),
 )
@@ -131,7 +131,7 @@ async def shutdown(_: Context[Inputs, None, Settings]):
 @element.executor
 async def run(ctx: Context[Inputs, None, Settings]):
     
-    if ctx.settings.is_enabled.value:
+    if ctx.settings.enabled.value:
         frame: Frame = ctx.inputs.input.value
 
         # Map for placeholders
