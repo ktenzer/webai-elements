@@ -15,7 +15,6 @@ from webai_element_sdk.element.settings import (
 
 # Globals
 ENDPOINT: str
-HTTP_METHOD: str
 HEADERS: Dict[str, str]
 BODY_TEMPLATE: Template
 TIMEOUT_SEC: int
@@ -30,16 +29,6 @@ class Settings(ElementSettings):
         required=True,
     )
 
-    method = TextSetting(
-        name="method",
-        display_name="HTTP Method",
-        default="POST",
-        description="HTTP verb to use when sending the request.",
-        valid_values=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        hints=["dropdown"],          
-        required=True,
-    )
-
     auth_token = TextSetting(
         name="auth_token",
         display_name="Auth token (optional)",
@@ -51,7 +40,7 @@ class Settings(ElementSettings):
     extra_headers = TextSetting(
         name="extra_headers",
         display_name="Extra headers (JSON object)",
-        default="{}",
+        default='{"Content-Type":  "application/json; charset=utf-8"}',
         description='Additional request headers, e.g. {"X-Custom":"1"}.',
         required=False,
     )
@@ -93,7 +82,7 @@ element = Element(
     name="rest",
     display_name="REST API",
     description="Send an HTTP request to any REST endpoint using a template body.",
-    version="0.1.8",
+    version="0.1.10",
     settings=Settings(),
     inputs=Inputs(),
 )
@@ -101,10 +90,9 @@ element = Element(
 # Startup
 @element.startup
 async def startup(ctx: Context[Inputs, None, Settings]):
-    global ENDPOINT, HTTP_METHOD, HEADERS, BODY_TEMPLATE, TIMEOUT_SEC
+    global ENDPOINT, HEADERS, BODY_TEMPLATE, TIMEOUT_SEC
 
     ENDPOINT = ctx.settings.url.value
-    HTTP_METHOD = ctx.settings.method.value
     TIMEOUT_SEC = ctx.settings.timeout_sec.value
 
     # Parse headers
@@ -154,28 +142,15 @@ async def run(ctx: Context[Inputs, None, Settings]):
             return
 
         if ctx.settings.log_payload.value:
-            print("Payload:", body_dict)
+            print(body_dict)
 
-        # HTTP request
-        req_kwargs = {
-            "method": HTTP_METHOD,
-            "url": ENDPOINT,
-            "headers": HEADERS,
-            "timeout": aiohttp.ClientTimeout(total=TIMEOUT_SEC),
-        }
-        if HTTP_METHOD in {"GET", "DELETE"}:
-            req_kwargs["params"] = body_dict
-        else:
-            req_kwargs["json"] = body_dict
-
-        # Send request
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.request(**req_kwargs) as resp:
-                    text = await resp.text()
-                    if resp.status >= 400:
-                        print(f"HTTP {resp.status}: {text[:200]} {req_kwargs}")
-                    else:
-                        print(f"{resp.status} {len(text)} bytes {req_kwargs}")
+                async with session.post(url=ENDPOINT, 
+                                        data=json.dumps(body_dict),
+                                        headers=HEADERS) as response:
+                    resp = await response.json()
+                    print(f"***** Slack response: {resp} *****")
         except Exception as e:
-            print("Network error:", e)
+                error_msg = f"Error: {str(e)}"
+                print(f"***** Slack Error: {error_msg} *****")
